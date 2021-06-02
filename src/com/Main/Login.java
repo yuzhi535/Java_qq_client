@@ -43,7 +43,7 @@ public class Login extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String name = user_name.getText();
                 String pawd = String.valueOf(passwd.getPassword());
-                Client client = new Client("127.0.0.1", 6666, name, pawd);
+                Client client = new Client("49.232.155.89", 6666, name, pawd);
                 setVisible(false);
             }
         });
