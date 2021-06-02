@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="64685b07-4cdd-4031-9218-1bae6941d7b4" name="yuxi">
-        <fileTransfer rootFolder="/home/yuxi" accessType="SFTP" host="49.232.155.89" port="22" sshConfigId="37a54fa3-bfdf-4400-9f66-ef3ffcfbf2df" sshConfig="yuxi@49.232.155.89:22 password">
+      <webServer id="b7a0f45b-058b-4420-b405-2e29e02db739" name="yuxi">
+        <fileTransfer rootFolder="/home/yuxi" accessType="SFTP" host="49.232.155.89" port="22" sshConfigId="6e54b120-6e2a-44c8-98d1-f41832d11c08" sshConfig="yuxi@49.232.155.89:22 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>

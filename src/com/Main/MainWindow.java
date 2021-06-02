@@ -10,6 +10,7 @@ public class MainWindow extends JFrame {
 
     BufferedReader ir;
     BufferedWriter ow;
+    JTextArea area;   // currently use text area. however, i can try using table
 
     MainWindow(BufferedReader inputStreamReader, BufferedWriter outputStreamWriter) {
         ir = inputStreamReader;

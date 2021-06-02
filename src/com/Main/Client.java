@@ -9,7 +9,10 @@ import java.nio.charset.StandardCharsets;
 public class Client {
     Socket socket;
 
-    Client(String url, int port, String user, String passwd) {
+    BufferedWriter bw;
+    BufferedReader br;
+
+    Client(String url, int port, String user, String passwd, Login login) {
         try {
             socket = new Socket(url, port);
         } catch (IOException e) {
@@ -20,9 +23,30 @@ public class Client {
 
         Thread mythread = null;
         try {
-            mythread = new MyClient(socket, new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))
-                    , new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)), user, passwd);
-            mythread.start();
+            br = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+
+            bw.write("login\n");
+            bw.flush();
+
+            // validate the username
+            bw.write(user + "\n");
+            bw.flush();
+            bw.write(passwd + "\n");
+            bw.flush();
+
+
+            String str = br.readLine();
+            if (str.equals("invalid name! you should register it first!")) {
+                System.out.println("invalid");
+            } else {
+                mythread = new MyClient(socket, br, bw, user, passwd);
+
+                login.setVisible(false);
+                mythread.start();
+            }
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,12 +62,12 @@ class MyClient extends Thread {
 
 
     MyClient(Socket ss, BufferedReader inputStreamReader, BufferedWriter outputStreamWriter, String name, String pswd) {
+        System.out.println("asdoifjaisdfjasif");
         s = ss;
         ow = outputStreamWriter;
         ob = inputStreamReader;
         username = name;
         passwd = pswd;
-
         new MainWindow(ob, ow);
     }
 
