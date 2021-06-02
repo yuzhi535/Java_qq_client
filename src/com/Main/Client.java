@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 public class Client {
     Socket socket;
 
-    Client(String url, int port) {
+    Client(String url, int port, String user, String passwd) {
         try {
             socket = new Socket(url, port);
         } catch (IOException e) {
@@ -21,7 +21,7 @@ public class Client {
         Thread mythread = null;
         try {
             mythread = new MyClient(socket, new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))
-                    , new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)));
+                    , new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)), user, passwd);
             mythread.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -33,12 +33,17 @@ class MyClient extends Thread {
     Socket s;
     BufferedReader ob;
     BufferedWriter ow;
+    String username;
+    String passwd;
 
 
-    MyClient(Socket ss, BufferedReader inputStreamReader, BufferedWriter outputStreamWriter) {
+    MyClient(Socket ss, BufferedReader inputStreamReader, BufferedWriter outputStreamWriter, String name, String pswd) {
         s = ss;
         ow = outputStreamWriter;
         ob = inputStreamReader;
+        username = name;
+        passwd = pswd;
+
         new MainWindow(ob, ow);
     }
 
@@ -51,7 +56,7 @@ class MyClient extends Thread {
         }
 
         try {
-            ow.write("hello\n");
+            ow.write(username + "\n" + passwd + "\n");
             ow.flush();
         } catch (IOException e) {
             e.printStackTrace();
