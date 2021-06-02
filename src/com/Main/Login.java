@@ -74,18 +74,20 @@ public class Login extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
+            String name = user_name.getText();
+            String pawd = String.valueOf(passwd.getPassword());
 
-            if (actionEvent.getSource() == confirmBtn) {
-                String name = user_name.getText();
-                String pawd = String.valueOf(passwd.getPassword());
+            if (name.equals("") || pawd.equals("")) {
+                JOptionPane.showMessageDialog(null, "invalid username or passwd!");
+                return;
+            }
+            Client client = new Client("127.0.0.1", 6666);
 
-                if (name.equals("") || pawd.equals("")) {
-                    JOptionPane.showMessageDialog(null, "invalid username or passwd!");
-                    return;
-                }
-                Client client = new Client("127.0.0.1", 6666, name, pawd, me);
+
+            if (actionEvent.getActionCommand().equals("登陆")) {
+                client.login(name, pawd, me);
             } else {
-
+                client.register(name, pawd, me);
             }
         }
     }
