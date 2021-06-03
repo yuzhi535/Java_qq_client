@@ -76,7 +76,12 @@ public class Client {
             }
 
 
-        } catch (IOException e) {
+        } catch (EOFException e) {
+            JOptionPane.showMessageDialog(null, "连接失败");
+            System.out.println("invalid");
+        }
+
+        catch (IOException e) {
             e.printStackTrace();
         }
     }

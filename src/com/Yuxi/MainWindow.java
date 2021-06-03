@@ -119,7 +119,15 @@ public class MainWindow extends JFrame {
                         // 文件不能太大，因为序列化限制，否则会报错，或者分批发送，不过这样速度不好保证，如果只是功能就不要准确了
                         out.writeObject(info);
                         out.flush();
-                    } catch (IOException err) {
+                    } catch (ArrayIndexOutOfBoundsException err) {
+                        try {
+                            out.flush();
+                        } catch (IOException ioException) {
+                            ioException.printStackTrace();
+                        }
+                    }
+
+                    catch (IOException err) {
                         err.printStackTrace();
                     }
                 }
@@ -208,7 +216,7 @@ public class MainWindow extends JFrame {
                     type = info.getType();
                     dataSize += info.getData_size();
                     user = info.getUser_name();
-                    System.out.println(dataSize);
+                    System.out.println("datasize = " + dataSize);
                     if (dataSize == totalSize) {
                         if (type == 1) {
                             System.out.println(Arrays.toString(data));
