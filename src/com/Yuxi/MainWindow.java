@@ -29,7 +29,8 @@ public class MainWindow extends JFrame {
     //    private ImageFrame loadImageFrame;
     private JButton selectImageBtn;
     private JButton sendImageBtn;
-    private JLabel path;
+    private String path;
+    private JLabel pathLabel;
 
     // 成员列表
     private JTable usersTable;
@@ -60,7 +61,7 @@ public class MainWindow extends JFrame {
 //        loadImageFrame = new ImageFrame();
         selectImageBtn = new JButton("选择文件");
         sendImageBtn = new JButton("发送文件");
-        path = new JLabel("文件路径");
+        pathLabel = new JLabel("文件路径");
 
         String[][] temp = new String[1][1];
         temp[0][0] = "";
@@ -94,21 +95,32 @@ public class MainWindow extends JFrame {
                 int re = fileChooser.showDialog(null, "选择");
                 if (re == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
-                    byte[] data = null;
+                    path = file.getAbsolutePath();
+                    pathLabel.setText(path);
+                }
+            }
+        });
+
+        sendImageBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File file = new File(path);
+                byte[] data = null;
+                try {
+                    FileInputStream fs = new FileInputStream(file);
+                    data = fs.readAllBytes();
+                } catch (IOException err) {
+                    err.printStackTrace();
+                }
+                if (data != null) {
+                    User info = new User(user_name, passwd, 1, 2,
+                            data.length, file.getName(), data, data.length);
                     try {
-                        FileInputStream fs = new FileInputStream(file);
-                        data = fs.readAllBytes();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    if (data != null) {
-                        User info = new User(user_name, passwd, 1, 2, data.length, file.getName(), data, data.length);
-                        try {
-                            out.writeObject(info);
-                            out.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        // 文件不能太大，因为序列化限制，否则会报错，或者分批发送，不过这样速度不好保证，如果只是功能就不要准确了
+                        out.writeObject(info);
+                        out.flush();
+                    } catch (IOException err) {
+                        err.printStackTrace();
                     }
                 }
             }
@@ -125,7 +137,7 @@ public class MainWindow extends JFrame {
         add(jScrollPane3);
         add(selectImageBtn);
         add(sendImageBtn);
-        add(path);
+        add(pathLabel);
 
         setLayout(null);
 
@@ -136,7 +148,7 @@ public class MainWindow extends JFrame {
         clsBtn.setBounds(200, 320, 100, 30);
 
 //        loadImageFrame.setBounds(330, 0, 200, 350);
-        path.setBounds(400, 260, 80, 40);
+        pathLabel.setBounds(400, 260, 80, 40);
         selectImageBtn.setBounds(400, 320, 80, 30);
         sendImageBtn.setBounds(500, 320, 80, 30);
 
@@ -183,6 +195,7 @@ public class MainWindow extends JFrame {
         String users = "";
         String infoString = "";
         String user = "";
+        String rawDat = "";
 
         @Override
         public void run() {
@@ -191,12 +204,11 @@ public class MainWindow extends JFrame {
                     info = (User) in.readObject();
                     index = info.getIndex();
                     data = info.getData();
-                    users += info.getGroup();
                     totalSize = info.getTotal_size();
                     type = info.getType();
                     dataSize += info.getData_size();
                     user = info.getUser_name();
-
+                    System.out.println(dataSize);
                     if (dataSize == totalSize) {
                         if (type == 1) {
                             System.out.println(Arrays.toString(data));
@@ -206,10 +218,13 @@ public class MainWindow extends JFrame {
                             infoString = "";
                             data = null;
                         } else if (type == 2) {
-                            /**
-                             *
-                             */
+                            users = info.getGroup();
+                            File file = new File(users);
+                            FileOutputStream fs = new FileOutputStream(file);
+                            fs.write(data);
+                            fs.flush();
                         } else {   // 请求成员列表
+                            users += info.getGroup();
                             String[] userList;
                             int table_index = 1;
                             String delimeter = "\r";  // 指定分割字符
@@ -226,16 +241,15 @@ public class MainWindow extends JFrame {
                         users = "";
                         info = null;
                         users = "";
+                        rawDat = "";
                     } else {
                         if (type == 1) {
                             System.out.println(Arrays.toString(data));
                             infoString += new String(data);
                         } else if (type == 2) {
-                            /**
-                             *
-                             */
+                            rawDat += new String(data);
                         } else {
-
+                            users += info.getGroup();
                         }
                     }
                 } catch (EOFException | SocketException e) {

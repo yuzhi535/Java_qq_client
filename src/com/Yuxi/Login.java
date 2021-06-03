@@ -91,10 +91,13 @@ public class Login extends JFrame {
             }
         });
         confirmNetworkBtn.addActionListener(new ActionListener() {
+            String[] tips = new String[]{"设置网络", "取消"};
+
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 use_ip = ip_map.get(ip.getSelectedItem());
                 card.next(chooseNet);
+                setNetBtn.setText(tips[(++index) % 2]);
             }
         });
 
