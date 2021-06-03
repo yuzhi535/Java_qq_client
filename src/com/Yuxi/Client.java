@@ -11,6 +11,15 @@ public class Client {
     ObjectInputStream in;
     ObjectOutputStream out;
 
+    Client(String url, int port) {
+        try {
+            socket = new Socket(url, port);
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "请检查网络是否连接或者点口是否被占用");
+        }
+    }
+
     //  有时间把login 和 register 合并
     void register(String user, String passwd, Login login) {
         Thread mythread = null;
@@ -68,15 +77,6 @@ public class Client {
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    Client(String url, int port) {
-        try {
-            socket = new Socket(url, port);
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "请检查网络是否连接或者点口是否被占用");
         }
     }
 }
