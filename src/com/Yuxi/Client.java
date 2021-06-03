@@ -18,13 +18,13 @@ public class Client {
             in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
 
-            out.writeChars("register\n");
+            out.writeChars("register");
             out.flush();
 
             // validate the username
-            out.writeChars(user + "\n");
+            out.writeChars(user);
             out.flush();
-            out.writeChars(passwd + "\n");
+            out.writeChars(passwd);
             out.flush();
 
             String str = in.readUTF();
@@ -44,15 +44,14 @@ public class Client {
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(socket.getInputStream());
-            System.out.println("asodijfosajidf");
-            out.writeUTF("login\n");
+            out.writeUTF("login");
 
             out.flush();
 
             // validate the username
-            out.writeUTF(user + "\n");
+            out.writeUTF(user);
             out.flush();
-            out.writeUTF(passwd + "\n");
+            out.writeUTF(passwd);
             out.flush();
 
 

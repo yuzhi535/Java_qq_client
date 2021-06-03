@@ -6,7 +6,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class MainWindow extends JFrame {
 
@@ -20,15 +22,16 @@ public class MainWindow extends JFrame {
     ObjectInputStream in;
     ObjectOutputStream out;
 
-    MainWindow(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream, Socket socket, String _user_name, String _passwd) {
+    MainWindow(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream,
+               Socket socket, String _user_name, String _passwd) {
 
         user_name = _user_name;
         passwd = _passwd;
         in = objectInputStream;
         out = objectOutputStream;
 
-        writeArea = new JTextArea(4, 4);
-        readArea = new JTextArea(4, 4);
+        writeArea = new JTextArea(15, 20);
+        readArea = new JTextArea(15, 20);
         readArea.setEditable(false);
         sendBtn = new JButton("发送");
         clsBtn = new JButton("清空");
@@ -50,14 +53,13 @@ public class MainWindow extends JFrame {
                 writeArea.setText("");
             }
         });
+        setLayout(new FlowLayout());
 
-        add(readArea);
         add(writeArea);
+        add(readArea);
         add(sendBtn);
         add(clsBtn);
 
-
-        setLayout(new FlowLayout());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(600, 400);
         System.out.println("true");
@@ -66,34 +68,63 @@ public class MainWindow extends JFrame {
     }
 
     class Handle extends Thread {
-        Handle() {
 
-        }
+        User info;
+        int index;
+        byte[] data;
+        int totalSize;
+        int type;
+        int dataSize = 0;
+        String users = "";
+        String infoString = "";
 
         @Override
         public void run() {
-
-            try {
-                User info = (User) in.readObject();
-                int index = info.getIndex();
-                byte[] data = info.getData();
-                String users = info.getGroup();
-                int totalSize = info.getTotal_size();
-                int type = info.getType();
-                int dataSize = info.getData_size();
-
-
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
+            while (true) {
+                try {
+                    info = (User) in.readObject();
+                    index = info.getIndex();
+                    data = info.getData();
+                    users = info.getGroup();
+                    totalSize = info.getTotal_size();
+                    type = info.getType();
+                    dataSize += info.getData_size();
+                    if (dataSize == totalSize) {
+                        if (type == 1) {
+                            System.out.println(Arrays.toString(data));
+                            infoString += new String(data);
+                            readArea.setText(infoString);
+                            infoString = "";
+                            data = null;
+                        } else {
+                            /**
+                             *
+                             */
+                        }
+                        dataSize = 0;
+                        users = "";
+                        info = null;
+                    } else {
+                        if (type == 1) {
+                            System.out.println(Arrays.toString(data));
+                            infoString += new String(data);
+                        } else {
+                            /**
+                             *
+                             */
+                        }
+                    }
+                } catch (EOFException | SocketException e) {
+                    JOptionPane.showConfirmDialog(null, "连接出现问题，即将退出");
+                    System.exit(-1);
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    JOptionPane.showConfirmDialog(null, "连接出现问题，即将退出");
+                    System.exit(-1);
+                }
             }
 
 
-//            try {
-//                String msg = br.readLine();
-//                readArea.append(msg);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
 
         }
     }
@@ -106,7 +137,9 @@ public class MainWindow extends JFrame {
         }
 
         if (str.length() <= 65535) {
-            out.writeObject(new User(user_name, passwd, 1, 1, str.length(), "asd", str.getBytes(StandardCharsets.UTF_8), str.length()));
+            System.out.println(str);
+            out.writeObject(new User(user_name, passwd, 1, 1, str.length(), "asd",
+                    str.getBytes(StandardCharsets.UTF_8), str.length()));
             out.flush();
         } else {
             //---
