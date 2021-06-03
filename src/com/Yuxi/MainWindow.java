@@ -231,6 +231,7 @@ public class MainWindow extends JFrame {
                             FileOutputStream fs = new FileOutputStream(file);
                             fs.write(data);
                             fs.flush();
+                            JOptionPane.showMessageDialog(null, "接收" + file.getName() + "成功");
                         } else {   // 请求成员列表
                             users += info.getGroup();
                             String[] userList;
