@@ -9,7 +9,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
 public class Login extends JFrame {
     JTextField user_name;
@@ -82,7 +81,7 @@ public class Login extends JFrame {
         registerBtn.addActionListener(btnActionListener);
         setNetBtn.addActionListener(new ActionListener() {
 
-            String[] tips = new String[] {"设置网络", "取消"};
+            String[] tips = new String[]{"设置网络", "取消"};
 
 
             @Override
@@ -140,7 +139,9 @@ public class Login extends JFrame {
         chooseNet.setBackground(Color.WHITE);
         switchCard.setBackground(Color.WHITE);
 
-        setSize(300, 500);
+        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 300,
+                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 500, 300, 500);
+
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setVisible(true);

@@ -1,6 +1,7 @@
 package com.Yuxi;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,6 +9,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MainWindow extends JFrame {
@@ -24,6 +26,17 @@ public class MainWindow extends JFrame {
 
     private ObjectInputStream in;
     private ObjectOutputStream out;
+    //    private ImageFrame loadImageFrame;
+    private JButton selectImageBtn;
+    private JButton sendImageBtn;
+    private JLabel path;
+
+    // 成员列表
+    private JTable usersTable;
+    private final String[] user_groups = new String[]{"成员"};
+    private JScrollPane jScrollPane3;
+
+    private DefaultTableModel tableModel;    //获得表格模型
 
     MainWindow(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream,
                Socket socket, String _user_name, String _passwd) {
@@ -44,6 +57,17 @@ public class MainWindow extends JFrame {
         readArea.setEditable(false);
         sendBtn = new JButton("发送");
         clsBtn = new JButton("清空");
+//        loadImageFrame = new ImageFrame();
+        selectImageBtn = new JButton("选择文件");
+        sendImageBtn = new JButton("发送文件");
+        path = new JLabel("文件路径");
+
+        String[][] temp = new String[1][1];
+        temp[0][0] = "";
+        tableModel = new DefaultTableModel(temp, user_groups);
+        usersTable = new JTable(tableModel);
+        jScrollPane3 = new JScrollPane(usersTable);
+//        usersTable.set
 
         sendBtn.addActionListener(new ActionListener() {
             @Override
@@ -62,24 +86,90 @@ public class MainWindow extends JFrame {
                 writeArea.setText("");
             }
         });
+
+        selectImageBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JFileChooser fileChooser = new JFileChooser();
+                int re = fileChooser.showDialog(null, "选择");
+                if (re == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+                    byte[] data = null;
+                    try {
+                        FileInputStream fs = new FileInputStream(file);
+                        data = fs.readAllBytes();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if (data != null) {
+                        User info = new User(user_name, passwd, 1, 2, data.length, file.getName(), data, data.length);
+                        try {
+                            out.writeObject(info);
+                            out.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+
+
         setLayout(new FlowLayout());
 
         add(jScrollPane2);
         add(jScrollPane1);
         add(sendBtn);
         add(clsBtn);
+//        add(loadImageFrame);
+        add(jScrollPane3);
+        add(selectImageBtn);
+        add(sendImageBtn);
+        add(path);
 
         setLayout(null);
 
-        jScrollPane1.setBounds(0, 0, 400, 150);
-        jScrollPane2.setBounds(0, 160, 400, 150);
+        jScrollPane1.setBounds(0, 0, 380, 150);
+        jScrollPane2.setBounds(0, 160, 380, 150);
+        jScrollPane3.setBounds(400, 0, 150, 250);
         sendBtn.setBounds(80, 320, 100, 30);
         clsBtn.setBounds(200, 320, 100, 30);
 
+//        loadImageFrame.setBounds(330, 0, 200, 350);
+        path.setBounds(400, 260, 80, 40);
+        selectImageBtn.setBounds(400, 320, 80, 30);
+        sendImageBtn.setBounds(500, 320, 80, 30);
+
+        setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(600, 400);
+        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 600,
+                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 400, 600, 400);
+
         setVisible(true);
         new Handle().start();    // read the remote msg
+
+        // 时刻发送成员列表
+        Thread daemonThread = new Thread(() -> {
+            while (true) {
+                String str = "group";
+                User info = new User(user_name, passwd, 1, 3, str.length(), "asd",
+                        str.getBytes(StandardCharsets.UTF_8), str.length());
+                try {
+                    out.writeObject(info);
+                    out.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(1000);   // 每一秒发送请求
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+        daemonThread.setDaemon(true);    // 设置守护线程
+        daemonThread.start();
     }
 
     class Handle extends Thread {
@@ -92,7 +182,7 @@ public class MainWindow extends JFrame {
         int dataSize = 0;
         String users = "";
         String infoString = "";
-        String user;
+        String user = "";
 
         @Override
         public void run() {
@@ -101,7 +191,7 @@ public class MainWindow extends JFrame {
                     info = (User) in.readObject();
                     index = info.getIndex();
                     data = info.getData();
-                    users = info.getGroup();
+                    users += info.getGroup();
                     totalSize = info.getTotal_size();
                     type = info.getType();
                     dataSize += info.getData_size();
@@ -115,22 +205,37 @@ public class MainWindow extends JFrame {
                             getTText(infoString);
                             infoString = "";
                             data = null;
-                        } else {
+                        } else if (type == 2) {
                             /**
                              *
                              */
+                        } else {   // 请求成员列表
+                            String[] userList;
+                            int table_index = 1;
+                            String delimeter = "\r";  // 指定分割字符
+                            userList = users.split(delimeter);
+                            for (int i = tableModel.getRowCount() - 1; i >= 0; --i) {
+                                tableModel.removeRow(i);
+                            }
+                            for (int i = 1; i < userList.length; ++i) {
+                                System.out.println(userList[i]);
+                                tableModel.addRow(new String[]{userList[i]});
+                            }
                         }
                         dataSize = 0;
                         users = "";
                         info = null;
+                        users = "";
                     } else {
                         if (type == 1) {
                             System.out.println(Arrays.toString(data));
                             infoString += new String(data);
-                        } else {
+                        } else if (type == 2) {
                             /**
                              *
                              */
+                        } else {
+
                         }
                     }
                 } catch (EOFException | SocketException e) {
@@ -142,8 +247,6 @@ public class MainWindow extends JFrame {
                     System.exit(-1);
                 }
             }
-
-
         }
     }
 
@@ -162,4 +265,10 @@ public class MainWindow extends JFrame {
                 str.getBytes(StandardCharsets.UTF_8), str.length()));
         out.flush();
     }
+
+//    @Override
+//    public void paintComponents(Graphics g) {
+//        super.paintComponents(g);
+//        g.draw
+//    }
 }

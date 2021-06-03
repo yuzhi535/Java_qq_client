@@ -24,16 +24,18 @@ public class Client {
     void register(String user, String passwd, Login login) {
         Thread mythread = null;
         try {
-            in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
+            out.flush();
+            in = new ObjectInputStream(socket.getInputStream());
 
-            out.writeChars("register");
+            System.out.println("aosjdfasdfi");
+            out.writeUTF("register");
             out.flush();
 
             // validate the username
-            out.writeChars(user);
+            out.writeUTF(user);
             out.flush();
-            out.writeChars(passwd);
+            out.writeUTF(passwd);
             out.flush();
 
             String str = in.readUTF();
@@ -62,7 +64,6 @@ public class Client {
             out.flush();
             out.writeUTF(passwd);
             out.flush();
-
 
             String str = in.readUTF();
 
