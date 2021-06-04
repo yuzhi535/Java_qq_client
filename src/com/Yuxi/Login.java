@@ -142,8 +142,8 @@ public class Login extends JFrame {
         chooseNet.setBackground(Color.WHITE);
         switchCard.setBackground(Color.WHITE);
 
-        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 300,
-                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 500, 300, 500);
+        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 150,
+                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 250, 300, 500);
 
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -166,8 +166,7 @@ public class Login extends JFrame {
                 JOptionPane.showMessageDialog(null, "invalid username or passwd!");
                 return;
             }
-//            Client client = new Client("127.0.0.1", 6666);
-            Client client = new Client(use_ip, 6666);
+            Client client = new Client("127.0.0.1", 6666);
             if (actionEvent.getActionCommand().equals("登陆")) {
                 client.login(name, pawd, me);
             } else {

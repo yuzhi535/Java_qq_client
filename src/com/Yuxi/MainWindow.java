@@ -125,9 +125,7 @@ public class MainWindow extends JFrame {
                         } catch (IOException ioException) {
                             ioException.printStackTrace();
                         }
-                    }
-
-                    catch (IOException err) {
+                    } catch (IOException err) {
                         err.printStackTrace();
                     }
                 }
@@ -162,8 +160,8 @@ public class MainWindow extends JFrame {
 
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 600,
-                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 400, 600, 400);
+        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 300,
+                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 200, 600, 400);
 
         setVisible(true);
         new Handle().start();    // read the remote msg
@@ -241,6 +239,7 @@ public class MainWindow extends JFrame {
                             for (int i = tableModel.getRowCount() - 1; i >= 0; --i) {
                                 tableModel.removeRow(i);
                             }
+                            System.out.println(userList[0]);
                             for (int i = 1; i < userList.length; ++i) {
                                 System.out.println(userList[i]);
                                 tableModel.addRow(new String[]{userList[i]});
@@ -262,8 +261,11 @@ public class MainWindow extends JFrame {
                         }
                     }
                 } catch (EOFException | SocketException e) {
-                    JOptionPane.showConfirmDialog(null, "连接出现问题，即将退出");
+                    JOptionPane.showMessageDialog(null, "连接出现问题，即将退出");
                     System.exit(-1);
+                } catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "发送失败");
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                     JOptionPane.showConfirmDialog(null, "连接出现问题，即将退出");

@@ -45,7 +45,11 @@ public class Client {
             } else {
                 JOptionPane.showMessageDialog(null, "用户名重复，请重新注册!");
             }
-        } catch (IOException e) {
+        } catch (EOFException e) {
+            JOptionPane.showMessageDialog(null, "网络未连接，请检查网络");
+        }
+
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
