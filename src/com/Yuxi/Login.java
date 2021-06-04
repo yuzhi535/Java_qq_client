@@ -36,9 +36,9 @@ public class Login extends JFrame {
     Login() {
         super("登陆");
         ip_map = new HashMap<>();
-        use_ip = "49.232.155.89";
-        ip_map.put("云端", use_ip);
-        ip_map.put("本地", "localhost");
+        use_ip = "localhost";
+        ip_map.put("云端服务器", "49.232.155.89");
+        ip_map.put("本地服务器", "localhost");
 
 
         try {
@@ -166,7 +166,8 @@ public class Login extends JFrame {
                 JOptionPane.showMessageDialog(null, "invalid username or passwd!");
                 return;
             }
-            Client client = new Client("127.0.0.1", 6666);
+            System.out.println("ip = " + use_ip);
+            Client client = new Client(use_ip, 6666);
             if (actionEvent.getActionCommand().equals("登陆")) {
                 client.login(name, pawd, me);
             } else {
