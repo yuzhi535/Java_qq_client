@@ -154,7 +154,7 @@ public class MainWindow extends JFrame {
         clsBtn.setBounds(200, 320, 100, 30);
 
 //        loadImageFrame.setBounds(330, 0, 200, 350);
-        pathLabel.setBounds(400, 260, 80, 40);
+        pathLabel.setBounds(400, 260, 100, 40);
         selectImageBtn.setBounds(400, 320, 80, 30);
         sendImageBtn.setBounds(500, 320, 80, 30);
 

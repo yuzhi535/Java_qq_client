@@ -47,9 +47,7 @@ public class Client {
             }
         } catch (EOFException e) {
             JOptionPane.showMessageDialog(null, "网络未连接，请检查网络");
-        }
-
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -72,7 +70,7 @@ public class Client {
             String str = in.readUTF();
 
             if (str.equals("invalid")) {
-                JOptionPane.showMessageDialog(null, "没有此用户，请注册或检查填写的信息");
+                JOptionPane.showMessageDialog(null, "没有此用户，请注册或检查填写的信息或检查是否重复登陆");
                 System.out.println("invalid");
             } else {
                 login.setVisible(false);
@@ -83,9 +81,7 @@ public class Client {
         } catch (EOFException e) {
             JOptionPane.showMessageDialog(null, "连接失败");
             System.out.println("invalid");
-        }
-
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

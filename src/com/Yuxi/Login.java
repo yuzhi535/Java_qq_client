@@ -65,8 +65,8 @@ public class Login extends JFrame {
         ip_tip = new JLabel("IP地址");
 
         ip = new Choice();
-        ip.add("云端服务器");
         ip.add("本地服务器");
+        ip.add("云端服务器");
 
         user_name = new JTextField("", 14);
         passwd = new JPasswordField("", 14);
