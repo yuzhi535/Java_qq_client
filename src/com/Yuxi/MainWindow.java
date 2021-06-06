@@ -9,7 +9,6 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MainWindow extends JFrame {
@@ -28,7 +27,7 @@ public class MainWindow extends JFrame {
     private ObjectOutputStream out;
     //    private ImageFrame loadImageFrame;
     private JButton selectImageBtn;
-    private JButton sendImageBtn;
+    private JButton sendFileBtn;
     private String path;
     private JLabel pathLabel;
 
@@ -60,7 +59,7 @@ public class MainWindow extends JFrame {
         clsBtn = new JButton("清空");
 //        loadImageFrame = new ImageFrame();
         selectImageBtn = new JButton("选择文件");
-        sendImageBtn = new JButton("发送文件");
+        sendFileBtn = new JButton("发送文件");
         pathLabel = new JLabel("文件路径");
 
         String[][] temp = new String[1][1];
@@ -101,36 +100,43 @@ public class MainWindow extends JFrame {
             }
         });
 
-        sendImageBtn.addActionListener(new ActionListener() {
+        sendFileBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 File file = new File(path);
                 byte[] data = null;
+                double loop = 0;
+                int length;
                 try {
                     FileInputStream fs = new FileInputStream(file);
-                    data = fs.readAllBytes();
+                    length = fs.readAllBytes().length;
+                    fs.skip(-length);
+
+                    System.out.println("length = " + length);
+                    if (length != 0) {
+                        int index = 1;
+                        loop = length / 1024.0;
+                        data = new byte[1024];
+                        for (; index - 1 <= loop; ++index) {
+                            int offset = (index - 1) * 1024;
+                            int re = fs.read(data, 0, 1024);
+                            if (re != -1) {
+                                System.out.println(Arrays.toString(data) + "-----------\n");
+                                User info = new User(user_name, passwd, index, 2,
+                                        offset, file.getName(), data, length);
+                                out.writeObject(info);
+                                out.flush();
+                            } else {
+                                JOptionPane.showMessageDialog(null, "文件读取出错！");
+                                break;
+                            }
+                        }
+                    }
+                    fs.close();
                 } catch (IOException err) {
                     err.printStackTrace();
                 }
-                if (data != null) {
-                    User info = new User(user_name, passwd, 1, 2,
-                            data.length, file.getName(), data, data.length);
-                    try {
-                        // 文件不能太大，因为序列化限制，否则会报错，或者分批发送，不过这样速度不好保证，如果只是功能就不要准确了
-                        out.writeObject(info);
-                        out.flush();
-                    } catch (ArrayIndexOutOfBoundsException err) {
-                        try {
-                            out.flush();
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
-                        }
-                    }
 
-                    catch (IOException err) {
-                        err.printStackTrace();
-                    }
-                }
             }
         });
 
@@ -144,7 +150,7 @@ public class MainWindow extends JFrame {
 //        add(loadImageFrame);
         add(jScrollPane3);
         add(selectImageBtn);
-        add(sendImageBtn);
+        add(sendFileBtn);
         add(pathLabel);
 
         setLayout(null);
@@ -158,7 +164,7 @@ public class MainWindow extends JFrame {
 //        loadImageFrame.setBounds(330, 0, 200, 350);
         pathLabel.setBounds(400, 260, 80, 40);
         selectImageBtn.setBounds(400, 320, 80, 30);
-        sendImageBtn.setBounds(500, 320, 80, 30);
+        sendFileBtn.setBounds(500, 320, 80, 30);
 
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -203,10 +209,10 @@ public class MainWindow extends JFrame {
         String users = "";
         String infoString = "";
         String user = "";
-        String rawDat = "";
 
         @Override
         public void run() {
+            byte[] rawDat = null;
             while (true) {
                 try {
                     info = (User) in.readObject();
@@ -214,23 +220,27 @@ public class MainWindow extends JFrame {
                     data = info.getData();
                     totalSize = info.getTotal_size();
                     type = info.getType();
-                    dataSize += info.getData_size();
+                    dataSize = info.getData_size();
                     user = info.getUser_name();
-                    System.out.println("datasize = " + dataSize);
-                    if (dataSize == totalSize) {
+//                    System.out.println("datasize = " + dataSize + " and totalsize = " + totalSize);
+                    if (index == 1)
+                        rawDat = new byte[totalSize];
+                    if (totalSize - dataSize < 1024) {
                         if (type == 1) {
-                            System.out.println(Arrays.toString(data));
+//                            System.out.println(Arrays.toString(data));
                             infoString += new String(data);
                             infoString = user + ":  " + infoString;
                             getTText(infoString);
                             infoString = "";
                             data = null;
                         } else if (type == 2) {
+                            System.arraycopy(data, 0, rawDat, (index - 1) * 1024, totalSize - dataSize);
                             users = info.getGroup();
                             File file = new File(users);
                             FileOutputStream fs = new FileOutputStream(file);
-                            fs.write(data);
+                            fs.write(rawDat);
                             fs.flush();
+                            fs.close();
                         } else {   // 请求成员列表
                             users += info.getGroup();
                             String[] userList;
@@ -241,7 +251,7 @@ public class MainWindow extends JFrame {
                                 tableModel.removeRow(i);
                             }
                             for (int i = 1; i < userList.length; ++i) {
-                                System.out.println(userList[i]);
+//                                System.out.println(userList[i]);
                                 tableModel.addRow(new String[]{userList[i]});
                             }
                         }
@@ -249,13 +259,13 @@ public class MainWindow extends JFrame {
                         users = "";
                         info = null;
                         users = "";
-                        rawDat = "";
+                        rawDat = null;
                     } else {
                         if (type == 1) {
-                            System.out.println(Arrays.toString(data));
+//                            System.out.println(Arrays.toString(data));
                             infoString += new String(data);
                         } else if (type == 2) {
-                            rawDat += new String(data);
+                            System.arraycopy(data, 0, rawDat, dataSize, 1024);
                         } else {
                             users += info.getGroup();
                         }
