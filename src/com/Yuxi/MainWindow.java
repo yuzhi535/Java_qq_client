@@ -121,7 +121,6 @@ public class MainWindow extends JFrame {
                             int offset = (index - 1) * 1024;
                             int re = fs.read(data, 0, 1024);
                             if (re != -1) {
-                                System.out.println(Arrays.toString(data) + "-----------\n");
                                 User info = new User(user_name, passwd, index, 2,
                                         offset, file.getName(), data, length);
                                 out.writeObject(info);
@@ -235,7 +234,7 @@ public class MainWindow extends JFrame {
                             data = null;
                         } else if (type == 2) {
                             System.arraycopy(data, 0, rawDat, (index - 1) * 1024, totalSize - dataSize);
-                            users = info.getGroup();
+                            users = info.getGroup();  // file name
                             File file = new File(users);
                             FileOutputStream fs = new FileOutputStream(file);
                             fs.write(rawDat);
