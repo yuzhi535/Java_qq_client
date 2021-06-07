@@ -12,6 +12,7 @@ import java.io.Serializable;
  * param type       text or img. 1 is text and 2 is img
  */
 public class User implements Serializable {
+    private static final long serialVersionUID = 2709425275741743919L;
     private String user_name;
     private String passwd;
     private int data_size;
