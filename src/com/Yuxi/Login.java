@@ -26,7 +26,7 @@ public class Login extends JFrame {
     BufferedImage img;
     JButton setNetBtn;
     CardLayout card;
-    Choice ip;
+    JComboBox<String> ip;
     JButton confirmNetworkBtn;
     String use_ip;
     JLabel ip_tip;
@@ -64,9 +64,9 @@ public class Login extends JFrame {
         confirmNetworkBtn = new JButton("确定");
         ip_tip = new JLabel("IP地址");
 
-        ip = new Choice();
-        ip.add("本地服务器");
-        ip.add("云端服务器");
+        ip = new JComboBox<>();
+        ip.addItem("本地服务器");
+        ip.addItem("云端服务器");
 
         user_name = new JTextField("", 14);
         passwd = new JPasswordField("", 14);
