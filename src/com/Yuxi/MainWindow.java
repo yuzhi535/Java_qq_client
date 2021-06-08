@@ -9,8 +9,8 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.TreeMap;
 
 public class MainWindow extends JFrame {
 
@@ -27,8 +27,8 @@ public class MainWindow extends JFrame {
     private ObjectInputStream in;
     private ObjectOutputStream out;
     //    private ImageFrame loadImageFrame;
-    private JButton selectImageBtn;
-    private JButton sendImageBtn;
+    private JButton selectFileBtn;
+    private JButton sendFileBtn;
     private String path;
     private JLabel pathLabel;
 
@@ -59,8 +59,8 @@ public class MainWindow extends JFrame {
         sendBtn = new JButton("发送");
         clsBtn = new JButton("清空");
 //        loadImageFrame = new ImageFrame();
-        selectImageBtn = new JButton("选择文件");
-        sendImageBtn = new JButton("发送文件");
+        selectFileBtn = new JButton("选择文件");
+        sendFileBtn = new JButton("发送文件");
         pathLabel = new JLabel("文件路径");
 
         String[][] temp = new String[1][1];
@@ -88,7 +88,7 @@ public class MainWindow extends JFrame {
             }
         });
 
-        selectImageBtn.addActionListener(new ActionListener() {
+        selectFileBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 JFileChooser fileChooser = new JFileChooser();
@@ -101,34 +101,38 @@ public class MainWindow extends JFrame {
             }
         });
 
-        sendImageBtn.addActionListener(new ActionListener() {
+        sendFileBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 File file = new File(path);
                 byte[] data = null;
+                int length;
                 try {
                     FileInputStream fs = new FileInputStream(file);
-                    data = fs.readAllBytes();
+                    length = fs.readAllBytes().length;
+                    fs.skip(-length);
+
+                    System.out.println("length = " + length);
+                    if (length != 0) {
+                        int index = 1;
+                        data = new byte[1024];
+                        int offset = 0;
+                        int re;
+                        while ((re = fs.read(data, 0, 1024)) != -1) {
+                            User info = new User(user_name, passwd, index, 2,
+                                    offset, file.getName(), data, length);
+                            out.writeObject(info);
+                            out.flush();
+                            offset += re;
+                            ++index;
+                            data = new byte[1024];
+                        }
+                    }
+                    fs.close();
                 } catch (IOException err) {
                     err.printStackTrace();
                 }
-                if (data != null) {
-                    User info = new User(user_name, passwd, 1, 2,
-                            data.length, file.getName(), data, data.length);
-                    try {
-                        // 文件不能太大，因为序列化限制，否则会报错，或者分批发送，不过这样速度不好保证，如果只是功能就不要准确了
-                        out.writeObject(info);
-                        out.flush();
-                    } catch (ArrayIndexOutOfBoundsException err) {
-                        try {
-                            out.flush();
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
-                        }
-                    } catch (IOException err) {
-                        err.printStackTrace();
-                    }
-                }
+
             }
         });
 
@@ -141,8 +145,8 @@ public class MainWindow extends JFrame {
         add(clsBtn);
 //        add(loadImageFrame);
         add(jScrollPane3);
-        add(selectImageBtn);
-        add(sendImageBtn);
+        add(selectFileBtn);
+        add(sendFileBtn);
         add(pathLabel);
 
         setLayout(null);
@@ -154,14 +158,14 @@ public class MainWindow extends JFrame {
         clsBtn.setBounds(200, 320, 100, 30);
 
 //        loadImageFrame.setBounds(330, 0, 200, 350);
-        pathLabel.setBounds(400, 260, 100, 40);
-        selectImageBtn.setBounds(400, 320, 80, 30);
-        sendImageBtn.setBounds(500, 320, 80, 30);
+        pathLabel.setBounds(400, 260, 80, 40);
+        selectFileBtn.setBounds(400, 320, 80, 30);
+        sendFileBtn.setBounds(500, 320, 80, 30);
 
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 300,
-                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 200, 600, 400);
+        setBounds(Toolkit.getDefaultToolkit().getScreenSize().width / 2 - 600,
+                Toolkit.getDefaultToolkit().getScreenSize().height / 2 - 400, 600, 400);
 
         setVisible(true);
         new Handle().start();    // read the remote msg
@@ -176,7 +180,9 @@ public class MainWindow extends JFrame {
                     out.writeObject(info);
                     out.flush();
                 } catch (IOException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "连接失败");
+                    System.exit(-1);
                 }
                 try {
                     Thread.sleep(1000);   // 每一秒发送请求
@@ -201,7 +207,8 @@ public class MainWindow extends JFrame {
         String users = "";
         String infoString = "";
         String user = "";
-        String rawDat = "";
+
+        TreeMap<Integer, byte[]> rawdat = new TreeMap<>();
 
         @Override
         public void run() {
@@ -212,24 +219,32 @@ public class MainWindow extends JFrame {
                     data = info.getData();
                     totalSize = info.getTotal_size();
                     type = info.getType();
-                    dataSize += info.getData_size();
+                    dataSize = info.getData_size();
                     user = info.getUser_name();
-                    System.out.println("datasize = " + dataSize);
-                    if (dataSize == totalSize) {
+
+                    if (totalSize - dataSize < 1024) {
                         if (type == 1) {
-                            System.out.println(Arrays.toString(data));
+//                            System.out.println(Arrays.toString(data));
                             infoString += new String(data);
                             infoString = user + ":  " + infoString;
                             getTText(infoString);
                             infoString = "";
                             data = null;
                         } else if (type == 2) {
-                            users = info.getGroup();
+                            System.out.println("file recv 1");
+                            rawdat.put(index, data);
+//                            System.arraycopy(data, 0, rawDat, dataSize, totalSize - dataSize);
+                            users = info.getGroup();  // file name
                             File file = new File(users);
                             FileOutputStream fs = new FileOutputStream(file);
-                            fs.write(data);
-                            fs.flush();
-                            JOptionPane.showMessageDialog(null, "接收" + file.getName() + "成功");
+                            for (int i : rawdat.keySet()) {
+                                fs.write(rawdat.get(i));
+                                fs.flush();
+                            }
+                            fs.close();
+
+                            JOptionPane.showMessageDialog(null, "接收文件成功");
+
                         } else {   // 请求成员列表
                             users += info.getGroup();
                             String[] userList;
@@ -239,9 +254,8 @@ public class MainWindow extends JFrame {
                             for (int i = tableModel.getRowCount() - 1; i >= 0; --i) {
                                 tableModel.removeRow(i);
                             }
-                            System.out.println(userList[0]);
                             for (int i = 1; i < userList.length; ++i) {
-                                System.out.println(userList[i]);
+//                                System.out.println(userList[i]);
                                 tableModel.addRow(new String[]{userList[i]});
                             }
                         }
@@ -249,23 +263,20 @@ public class MainWindow extends JFrame {
                         users = "";
                         info = null;
                         users = "";
-                        rawDat = "";
                     } else {
                         if (type == 1) {
-                            System.out.println(Arrays.toString(data));
+//                            System.out.println(Arrays.toString(data));
                             infoString += new String(data);
                         } else if (type == 2) {
-                            rawDat += new String(data);
+                            System.out.println("file recv2");
+                            rawdat.put(index, data);
                         } else {
                             users += info.getGroup();
                         }
                     }
                 } catch (EOFException | SocketException e) {
-                    JOptionPane.showMessageDialog(null, "连接出现问题，即将退出");
+                    JOptionPane.showConfirmDialog(null, "连接出现问题，即将退出");
                     System.exit(-1);
-                } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                    JOptionPane.showMessageDialog(null, "发送失败");
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                     JOptionPane.showConfirmDialog(null, "连接出现问题，即将退出");
